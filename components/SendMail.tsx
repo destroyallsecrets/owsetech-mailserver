@@ -44,13 +44,9 @@ export default function SendMail() {
   const users = useQuery(api.users.searchUsers, { query: userSearch });
   const draft = useQuery(api.mail.get, draftId ? { id: draftId } : "skip");
 
-  // Load draft data when available
+  // Draft functionality disabled
   useEffect(() => {
-    if (draft && draft.isDraft) {
-      setTo(draft.to);
-      setSubject(draft.subject);
-      setBody(draft.body);
-    }
+    // Draft loading disabled
   }, [draft]);
 
   const handleSend = async () => {
