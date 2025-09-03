@@ -14,9 +14,15 @@ export default function MailView({ id }: { id: Id<"mail"> }) {
   const deleteMail = useMutation(api.mail.deleteMail);
   const router = useRouter();
 
-  if (!mail) return (
+  if (mail === undefined) return (
     <div className="min-h-screen bg-[#e5e3db] flex items-center justify-center">
       <div className="text-xl">Loading...</div>
+    </div>
+  );
+
+  if (mail === null) return (
+    <div className="min-h-screen bg-[#e5e3db] flex items-center justify-center">
+      <div className="text-xl text-red-600">You need to register an email address to view mail.</div>
     </div>
   );
 

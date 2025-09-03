@@ -14,7 +14,10 @@ export const list = query({
       .filter((q) => q.eq(q.field("userId"), userId))
       .unique();
 
-    if (!user) throw new Error("User not registered");
+    if (!user) {
+      // Return empty array for unregistered users instead of throwing error
+      return [];
+    }
 
     const userAddress = `${user.username}@${user.domain}`;
 
@@ -76,7 +79,10 @@ export const get = query({
       .filter((q) => q.eq(q.field("userId"), identity.subject))
       .unique();
 
-    if (!user) throw new Error("User not registered");
+    if (!user) {
+      // Return null for unregistered users instead of throwing error
+      return null;
+    }
 
     const userAddress = `${user.username}@${user.domain}`;
 
@@ -107,7 +113,7 @@ export const send = mutation({
       .filter((q) => q.eq(q.field("userId"), userId))
       .unique();
 
-    if (!user) throw new Error("User not registered");
+    if (!user) throw new Error("Please register an email address first");
 
     const fromAddress = `${user.username}@${user.domain}`;
 
@@ -154,7 +160,7 @@ export const saveDraft = mutation({
       .filter((q) => q.eq(q.field("userId"), userId))
       .unique();
 
-    if (!user) throw new Error("User not registered");
+    if (!user) throw new Error("Please register an email address first");
 
     const fromAddress = `${user.username}@${user.domain}`;
 
@@ -199,7 +205,7 @@ export const deleteMail = mutation({
       .filter((q) => q.eq(q.field("userId"), identity.subject))
       .unique();
 
-    if (!user) throw new Error("User not registered");
+    if (!user) throw new Error("Please register an email address first");
 
     const userAddress = `${user.username}@${user.domain}`;
 
@@ -227,7 +233,7 @@ export const restoreMail = mutation({
       .filter((q) => q.eq(q.field("userId"), identity.subject))
       .unique();
 
-    if (!user) throw new Error("User not registered");
+    if (!user) throw new Error("Please register an email address first");
 
     const userAddress = `${user.username}@${user.domain}`;
 
@@ -255,7 +261,7 @@ export const markAsRead = mutation({
       .filter((q) => q.eq(q.field("userId"), identity.subject))
       .unique();
 
-    if (!user) throw new Error("User not registered");
+    if (!user) throw new Error("Please register an email address first");
 
     const userAddress = `${user.username}@${user.domain}`;
 
