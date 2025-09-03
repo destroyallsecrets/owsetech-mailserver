@@ -41,8 +41,10 @@ export default function SendMail() {
 
   const sendMail = useMutation(api.mail.send);
   const saveDraft = useMutation(api.mail.saveDraft);
+  const ensureUser = useMutation(api.users.ensureUser);
   const users = useQuery(api.users.searchUsers, { query: userSearch });
   const draft = useQuery(api.mail.get, draftId ? { id: draftId } : "skip");
+  const currentUser = useQuery(api.users.getCurrentUser);
 
   // Load draft data when available
   useEffect(() => {
@@ -65,6 +67,9 @@ export default function SendMail() {
     }
 
     try {
+      // Ensure user is registered before sending mail
+      await ensureUser();
+      
       await sendMail({
         to,
         subject,
@@ -79,9 +84,16 @@ export default function SendMail() {
       setTimeout(() => {
         router.push("/");
       }, 2000);
-    } catch (err) {
-      setError("Failed to send mail. Please try again.");
+    } catch (err: any) {
       console.error("Send mail error:", err);
+      
+      if (err.message?.includes("Please register an email address first")) {
+        setError("You need to register an email address first. Please go to the Auth page to set up your username@domain.");
+      } else if (err.message?.includes("Recipient not found")) {
+        setError("Recipient not found. Please make sure the email address is correct and the user is registered.");
+      } else {
+        setError("Failed to send mail. Please try again.");
+      }
     }
   };
 
@@ -90,6 +102,9 @@ export default function SendMail() {
     setSuccess(null);
 
     try {
+      // Ensure user is registered before saving draft
+      await ensureUser();
+      
       const result = await saveDraft({
         to,
         subject,
@@ -102,9 +117,14 @@ export default function SendMail() {
       }
       
       setSuccess("Draft saved successfully!");
-    } catch (err) {
-      setError("Failed to save draft. Please try again.");
+    } catch (err: any) {
       console.error("Save draft error:", err);
+      
+      if (err.message?.includes("Please register an email address first")) {
+        setError("You need to register an email address first. Please go to the Auth page to set up your username@domain.");
+      } else {
+        setError("Failed to save draft. Please try again.");
+      }
     }
   };
 
@@ -130,6 +150,18 @@ export default function SendMail() {
 
         </CardHeader>
         <CardContent>
+          {!currentUser && (
+            <div className="text-lg text-orange-600 font-semibold bg-orange-50 p-3 rounded border-2 border-orange-200 mb-4">
+              ⚠️ You need to register an email address first. 
+              <Button 
+                variant="outline" 
+                className="text-orange-600 underline p-0 ml-2 border-none bg-transparent hover:bg-orange-100"
+                onClick={() => router.push("/auth")}
+              >
+                Go to Auth page
+              </Button>
+            </div>
+          )}
           <form onSubmit={e => { e.preventDefault(); handleSend(); }} className="space-y-6">
             {/* Recipient Field with User Search */}
             <div className="relative">
@@ -216,12 +248,14 @@ export default function SendMail() {
                 variant="outline"
                 className="flex-1 text-xl py-6"
                 onClick={handleSaveDraft}
+                disabled={!currentUser}
               >
                 Save Draft
               </Button>
               <Button
                 type="submit"
                 className="flex-1 text-xl py-6"
+                disabled={!currentUser}
               >
                 Send Mail
               </Button>
