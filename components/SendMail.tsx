@@ -18,21 +18,21 @@ export default function SendMail() {
   const [userSearch, setUserSearch] = useState("");
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [draftId, setDraftId] = useState<Id<"mail"> | null>(null);
-  
+
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // Get parameters from URL
   useEffect(() => {
     const draftParam = searchParams.get("draft");
     const toParam = searchParams.get("to");
     const subjectParam = searchParams.get("subject");
     const bodyParam = searchParams.get("body");
-    
+
     if (draftParam) {
       setDraftId(draftParam as Id<"mail">);
     }
-    
+
     // Set reply parameters if present
     if (toParam) setTo(toParam);
     if (subjectParam) setSubject(subjectParam);
@@ -44,17 +44,68 @@ export default function SendMail() {
   const users = useQuery(api.users.searchUsers, { query: userSearch });
   const draft = useQuery(api.mail.get, draftId ? { id: draftId } : "skip");
 
-  // Draft functionality disabled
+  // Load draft data when available
   useEffect(() => {
-    // Draft loading disabled
+    if (draft) {
+      setTo(draft.to);
+      setSubject(draft.subject);
+      setBody(draft.body);
+    }
   }, [draft]);
 
   const handleSend = async () => {
-    setError("Mail functionality is temporarily disabled. Please check back later.");
+    setError(null);
+    setSuccess(null);
+
+    // Validate email format
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+$/;
+    if (!emailRegex.test(to)) {
+      setError("Please enter a valid email address (username@domain)");
+      return;
+    }
+
+    try {
+      await sendMail({
+        to,
+        subject,
+        body,
+      });
+      setSuccess("Mail sent successfully!");
+      setTo("");
+      setSubject("");
+      setBody("");
+      
+      // Redirect to inbox after a short delay
+      setTimeout(() => {
+        router.push("/");
+      }, 2000);
+    } catch (err) {
+      setError("Failed to send mail. Please try again.");
+      console.error("Send mail error:", err);
+    }
   };
 
   const handleSaveDraft = async () => {
-    setError("Draft functionality is temporarily disabled. Please check back later.");
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const result = await saveDraft({
+        to,
+        subject,
+        body,
+        id: draftId || undefined,
+      });
+      
+      if (!draftId) {
+        setDraftId(result);
+      }
+      
+      setSuccess("Draft saved successfully!");
+    } catch (err) {
+      setError("Failed to save draft. Please try again.");
+      console.error("Save draft error:", err);
+    }
   };
 
   const selectUser = (user: any) => {
@@ -63,7 +114,7 @@ export default function SendMail() {
     setShowUserDropdown(false);
   };
 
-  const filteredUsers = users?.filter(user => 
+  const filteredUsers = users?.filter(user =>
     user.username.toLowerCase().includes(userSearch.toLowerCase()) ||
     user.domain.toLowerCase().includes(userSearch.toLowerCase()) ||
     (user.displayName && user.displayName.toLowerCase().includes(userSearch.toLowerCase()))
@@ -76,17 +127,15 @@ export default function SendMail() {
           <CardTitle className="text-2xl font-bold text-retroBlue">
             {draftId ? "Edit Draft" : "Compose Mail"}
           </CardTitle>
-          <div className="text-lg text-orange-600 font-semibold bg-orange-50 p-3 rounded border-2 border-orange-200">
-            ⚠️ Mail functionality is temporarily disabled
-          </div>
+
         </CardHeader>
         <CardContent>
           <form onSubmit={e => { e.preventDefault(); handleSend(); }} className="space-y-6">
             {/* Recipient Field with User Search */}
             <div className="relative">
               <label className="block text-lg font-medium mb-2">To:</label>
-              <Input 
-                placeholder="Search users or type username@domain" 
+              <Input
+                placeholder="Search users or type username@domain"
                 value={userSearch || to}
                 onChange={e => {
                   const value = e.target.value;
@@ -96,9 +145,9 @@ export default function SendMail() {
                 }}
                 onFocus={() => setShowUserDropdown(userSearch.length > 0 && !userSearch.includes("@"))}
                 className="text-xl py-4"
-                required 
+                required
               />
-              
+
               {/* User Dropdown */}
               {showUserDropdown && filteredUsers.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-white border-2 border-[#b0b0b0] rounded shadow-lg max-h-48 overflow-y-auto">
@@ -120,24 +169,24 @@ export default function SendMail() {
 
             <div>
               <label className="block text-lg font-medium mb-2">Subject:</label>
-              <Input 
-                placeholder="Subject" 
-                value={subject} 
-                onChange={e => setSubject(e.target.value)} 
+              <Input
+                placeholder="Subject"
+                value={subject}
+                onChange={e => setSubject(e.target.value)}
                 className="text-xl py-4"
-                required 
+                required
               />
             </div>
 
             <div>
               <label className="block text-lg font-medium mb-2">Message:</label>
-              <Textarea 
-                placeholder="Write your message here..." 
-                value={body} 
-                onChange={e => setBody(e.target.value)} 
+              <Textarea
+                placeholder="Write your message here..."
+                value={body}
+                onChange={e => setBody(e.target.value)}
                 className="text-lg"
-                required 
-                rows={8} 
+                required
+                rows={8}
               />
             </div>
 
@@ -154,29 +203,27 @@ export default function SendMail() {
             )}
 
             <div className="flex gap-4">
-              <Button 
-                variant="outline" 
-                type="button" 
-                className="flex-1 text-xl py-6" 
+              <Button
+                variant="outline"
+                type="button"
+                className="flex-1 text-xl py-6"
                 onClick={() => router.push("/")}
               >
                 Back to Inbox
               </Button>
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 variant="outline"
-                className="flex-1 text-xl py-6 opacity-50 cursor-not-allowed" 
+                className="flex-1 text-xl py-6"
                 onClick={handleSaveDraft}
-                disabled
               >
-                Save Draft (Disabled)
+                Save Draft
               </Button>
-              <Button 
-                type="submit" 
-                className="flex-1 text-xl py-6 bg-gray-400 cursor-not-allowed opacity-50"
-                disabled
+              <Button
+                type="submit"
+                className="flex-1 text-xl py-6"
               >
-                Send Mail (Disabled)
+                Send Mail
               </Button>
             </div>
           </form>

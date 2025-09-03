@@ -94,3 +94,59 @@ export const searchUsers = query({
     );
   }
 });
+
+export const ensureUser = mutation({
+  handler: async ({ db, auth }) => {
+    const identity = await auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    
+    const userId = identity.subject;
+    const email = identity.email;
+    const name = identity.name;
+    
+    // Check if user already exists
+    const existingUser = await db
+      .query("users")
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .unique();
+      
+    if (existingUser) {
+      return existingUser;
+    }
+    
+    // Auto-create user with email-based username
+    if (!email) throw new Error("No email associated with user");
+    
+    const [emailUsername, emailDomain] = email.split("@");
+    let username = emailUsername;
+    let domain = "mail.local"; // Default domain for auto-created users
+    
+    // Ensure unique username@domain
+    let counter = 1;
+    let finalUsername = username;
+    
+    while (true) {
+      const existing = await db
+        .query("users")
+        .withIndex("by_username_domain", (q) => q.eq("username", finalUsername).eq("domain", domain))
+        .unique();
+        
+      if (!existing) break;
+      
+      finalUsername = `${username}${counter}`;
+      counter++;
+    }
+    
+    // Create the user
+    const newUserId = await db.insert("users", { 
+      username: finalUsername, 
+      domain, 
+      displayName: name || finalUsername,
+      bio: "Auto-created user",
+      userId,
+      email
+    });
+    
+    return await db.get(newUserId);
+  },
+});
