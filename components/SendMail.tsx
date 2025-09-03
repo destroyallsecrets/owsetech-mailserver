@@ -50,40 +50,11 @@ export default function SendMail() {
   }, [draft]);
 
   const handleSend = async () => {
-    setError(null);
-    setSuccess(null);
-    
-    // Validate to address: must be username@domain
-    if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+$/.test(to)) {
-      setError("Recipient must be in the format username@domain");
-      return;
-    }
-    
-    try {
-      await sendMail({ to, subject, body, isDraft: false });
-      setSuccess("Mail sent successfully!");
-      setTimeout(() => router.push("/"), 1500);
-    } catch (err: any) {
-      setError(err.message || "Failed to send mail");
-    }
+    setError("Mail functionality is temporarily disabled. Please check back later.");
   };
 
   const handleSaveDraft = async () => {
-    setError(null);
-    setSuccess(null);
-    
-    try {
-      const id = await saveDraft({ 
-        id: draftId || undefined, 
-        to, 
-        subject, 
-        body 
-      });
-      setDraftId(id);
-      setSuccess("Draft saved!");
-    } catch (err: any) {
-      setError(err.message || "Failed to save draft");
-    }
+    setError("Draft functionality is temporarily disabled. Please check back later.");
   };
 
   const selectUser = (user: any) => {
@@ -105,6 +76,9 @@ export default function SendMail() {
           <CardTitle className="text-2xl font-bold text-retroBlue">
             {draftId ? "Edit Draft" : "Compose Mail"}
           </CardTitle>
+          <div className="text-lg text-orange-600 font-semibold bg-orange-50 p-3 rounded border-2 border-orange-200">
+            ⚠️ Mail functionality is temporarily disabled
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={e => { e.preventDefault(); handleSend(); }} className="space-y-6">
@@ -186,21 +160,23 @@ export default function SendMail() {
                 className="flex-1 text-xl py-6" 
                 onClick={() => router.push("/")}
               >
-                Cancel
+                Back to Inbox
               </Button>
               <Button 
                 type="button" 
                 variant="outline"
-                className="flex-1 text-xl py-6" 
+                className="flex-1 text-xl py-6 opacity-50 cursor-not-allowed" 
                 onClick={handleSaveDraft}
+                disabled
               >
-                Save Draft
+                Save Draft (Disabled)
               </Button>
               <Button 
                 type="submit" 
-                className="flex-1 text-xl py-6 bg-retroBlue hover:bg-retroBlue/80"
+                className="flex-1 text-xl py-6 bg-gray-400 cursor-not-allowed opacity-50"
+                disabled
               >
-                Send Mail
+                Send Mail (Disabled)
               </Button>
             </div>
           </form>
