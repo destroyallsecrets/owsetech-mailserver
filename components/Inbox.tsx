@@ -139,244 +139,157 @@ export default function Inbox() {
             </SignedOut>
             <SignedIn>
               {activeTab === "Mail" && (
-              <div>
-                {/* Folder Header */}
-                <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-[#b0b0b0]">
-                  <h2 className="text-2xl font-bold text-retroBlue capitalize">
-                    {currentFolder} ({mails?.length || 0})
-                  </h2>
-                  {currentUser && (
-                    <div className="text-lg text-retroBlue/80">
-                      {currentUser.username}@{currentUser.domain}
+                <div>
+                  {/* Folder Header */}
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-[#b0b0b0]">
+                    <h2 className="text-2xl font-bold text-retroBlue capitalize">
+                      {currentFolder} ({mails?.length || 0})
+                    </h2>
+                    {currentUser && (
+                      <div className="text-lg text-retroBlue/80">
+                        {currentUser.username}@{currentUser.domain}
+                      </div>
+                    )}
+                  </div>
+
+                  {mails?.length === 0 && (
+                    <div className="text-center py-12 text-retroBlue/60 text-xl">
+                      {currentFolder === "inbox" && "No messages in inbox"}
+                      {currentFolder === "sent" && "No sent messages"}
+                      {currentFolder === "drafts" && "No draft messages"}
+                      {currentFolder === "deleted" && "No deleted messages"}
                     </div>
                   )}
                 </div>
+              )}
 
-                {mails.map((mail) => {
-                  const from = parseAddress(mail.from);
-                  const to = parseAddress(mail.to);
-                  const isFromCurrentUser = currentUser && mail.from === `${currentUser.username}@${currentUser.domain}`;
-                  const displayAddress = isFromCurrentUser ? to : from;
-                  const addressLabel = isFromCurrentUser ? "To" : "From";
-                  
-                  return (
-                    <div
-                      key={mail._id}
-                      className={`flex items-center gap-4 px-6 py-4 border-b border-[#b0b0b0] hover:bg-[#f5f5f5] cursor-pointer group ${!mail.isRead && currentFolder === "inbox" ? "bg-blue-50" : ""}`}
-                    >
-                      <Avatar name={`@${displayAddress.username}@${displayAddress.domain}`} size={48} />
-                      <div 
-                        className="flex-1 min-w-0"
-                        onClick={() => {
-                          if (currentFolder === "inbox" && !mail.isRead) {
-                            markAsRead({ id: mail._id });
-                          }
-                          router.push(`/mail/${mail._id}`);
-                        }}
-                      >
-                        <div className="flex items-baseline justify-between gap-2">
-                          <div className={`text-xl truncate ${!mail.isRead && currentFolder === "inbox" ? "font-bold" : "font-medium"}`}>
-                            {mail.subject || "(no subject)"}
-                            {mail.isDraft && <span className="text-sm text-orange-600 ml-2">[DRAFT]</span>}
-                            {!mail.isRead && currentFolder === "inbox" && <span className="text-blue-600 ml-2">●</span>}
-                          </div>
-                          <div className="text-sm text-retroBlue/60 whitespace-nowrap">
-                            {formatDate(mail._creationTime)}
-                          </div>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                          <div className="text-sm text-retroBlue/80">
-                            {addressLabel}: <span className="hover:underline">@{displayAddress.username}@{displayAddress.domain}</span>
-                          </div>
-                          <div className="text-sm text-retroBlue/60 truncate">{mail.body}</div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100">
-                        {/* Draft Edit Button */}
-                        {mail.isDraft && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              router.push(`/send?draft=${mail._id}`);
-                            }}
-                          >
-                            Edit
-                          </Button>
-                        )}
-                        
-                        {/* Delete/Restore Button */}
-                        {currentFolder === "deleted" ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              restoreMail({ id: mail._id });
-                            }}
-                          >
-                            Restore
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              deleteMail({ id: mail._id });
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-                
-                {mails?.length === 0 && (
-                  <div className="text-center py-12 text-retroBlue/60 text-xl">
-                    {currentFolder === "inbox" && "No messages in inbox"}
-                    {currentFolder === "sent" && "No sent messages"}
-                    {currentFolder === "drafts" && "No draft messages"}
-                    {currentFolder === "deleted" && "No deleted messages"}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === "General" && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between border-b-2 border-[#b0b0b0] pb-4">
-                  <h2 className="text-2xl font-bold text-retroBlue">Mail Options</h2>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <input id="auto-save-drafts" type="checkbox" className="w-6 h-6 border-2 border-[#b0b0b0] rounded" />
-                    <label htmlFor="auto-save-drafts" className="text-xl cursor-pointer">Auto-save drafts</label>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <input id="show-email-preview" type="checkbox" className="w-6 h-6 border-2 border-[#b0b0b0] rounded" />
-                    <label htmlFor="show-email-preview" className="text-xl cursor-pointer">Show email preview</label>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <input id="enable-notifications" type="checkbox" className="w-6 h-6 border-2 border-[#b0b0b0] rounded" />
-                    <label htmlFor="enable-notifications" className="text-xl cursor-pointer">Enable desktop notifications</label>
-                  </div>
-                  <div className="pt-6">
-                    <Button
-                      className="text-xl py-6 px-8 bg-retroBlue hover:bg-retroBlue/80"
-                    >
-                      Save Changes
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "View" && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between border-b-2 border-[#b0b0b0] pb-4">
-                  <h2 className="text-2xl font-bold text-retroBlue">Display Settings</h2>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <label htmlFor="font-size" className="text-xl min-w-[200px]">Font Size:</label>
-                    <select id="font-size" className="text-xl px-4 py-2 border-2 border-[#b0b0b0] rounded bg-white">
-                      <option>Small</option>
-                      <option>Medium</option>
-                      <option>Large</option>
-                    </select>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <label htmlFor="messages-per-page" className="text-xl min-w-[200px]">Messages per page:</label>
-                    <select id="messages-per-page" className="text-xl px-4 py-2 border-2 border-[#b0b0b0] rounded bg-white">
-                      <option>25</option>
-                      <option>50</option>
-                      <option>100</option>
-                    </select>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <label htmlFor="message-preview" className="text-xl min-w-[200px]">Message preview:</label>
-                    <select id="message-preview" className="text-xl px-4 py-2 border-2 border-[#b0b0b0] rounded bg-white">
-                      <option>1 line</option>
-                      <option>2 lines</option>
-                      <option>3 lines</option>
-                    </select>
-                  </div>
-                  <div className="pt-6">
-                    <Button
-                      className="text-xl py-6 px-8 bg-retroBlue hover:bg-retroBlue/80"
-                    >
-                      Save Changes
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "Settings" && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between border-b-2 border-[#b0b0b0] pb-4">
-                  <h2 className="text-2xl font-bold text-retroBlue">Account Settings</h2>
-                </div>
+              {activeTab === "General" && (
                 <div className="space-y-6">
-                  <SignedIn>
-                    <div className="grid grid-cols-2 gap-8">
-                      <div>
-                        <label className="block text-xl mb-2">Current Email</label>
-                        <Input
-                          value={user?.primaryEmailAddress?.emailAddress || "Not available"}
-                          disabled
-                          className="text-xl py-4 bg-[#f0f0f0]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xl mb-2">Display Name</label>
-                        <Input
-                          value={user?.fullName || ""}
-                          placeholder="Your display name"
-                          className="text-xl py-4"
-                        />
-                      </div>
+                  <div className="flex items-center justify-between border-b-2 border-[#b0b0b0] pb-4">
+                    <h2 className="text-2xl font-bold text-retroBlue">Mail Options</h2>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <input id="auto-save-drafts" type="checkbox" className="w-6 h-6 border-2 border-[#b0b0b0] rounded" />
+                      <label htmlFor="auto-save-drafts" className="text-xl cursor-pointer">Auto-save drafts</label>
                     </div>
-                    <div className="pt-4 flex justify-between items-center border-t-2 border-[#b0b0b0]">
-                      <div className="flex items-center gap-4">
-                        <UserButton 
-                          appearance={{
-                            elements: {
-                              avatarBox: "w-12 h-12",
-                              userButtonPopoverCard: "bg-white border-2 border-[#b0b0b0]"
-                            }
-                          }}
-                        />
-                        <span className="text-xl">Manage Account</span>
-                      </div>
+                    <div className="flex items-center gap-4">
+                      <input id="show-email-preview" type="checkbox" className="w-6 h-6 border-2 border-[#b0b0b0] rounded" />
+                      <label htmlFor="show-email-preview" className="text-xl cursor-pointer">Show email preview</label>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <input id="enable-notifications" type="checkbox" className="w-6 h-6 border-2 border-[#b0b0b0] rounded" />
+                      <label htmlFor="enable-notifications" className="text-xl cursor-pointer">Enable desktop notifications</label>
+                    </div>
+                    <div className="pt-6">
                       <Button
                         className="text-xl py-6 px-8 bg-retroBlue hover:bg-retroBlue/80"
                       >
                         Save Changes
                       </Button>
                     </div>
-                  </SignedIn>
-                  <SignedOut>
-                    <div className="text-center py-8">
-                      <p className="text-xl mb-4">Please sign in to access account settings</p>
-                      <SignInButton mode="modal">
-                        <Button className="text-xl py-6 px-8 bg-retroBlue hover:bg-retroBlue/80">
-                          Sign In
-                        </Button>
-                      </SignInButton>
-                    </div>
-                  </SignedOut>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {activeTab === "View" && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between border-b-2 border-[#b0b0b0] pb-4">
+                    <h2 className="text-2xl font-bold text-retroBlue">Display Settings</h2>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <label htmlFor="font-size" className="text-xl min-w-[200px]">Font Size:</label>
+                      <select id="font-size" className="text-xl px-4 py-2 border-2 border-[#b0b0b0] rounded bg-white">
+                        <option>Small</option>
+                        <option>Medium</option>
+                        <option>Large</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label htmlFor="messages-per-page" className="text-xl min-w-[200px]">Messages per page:</label>
+                      <select id="messages-per-page" className="text-xl px-4 py-2 border-2 border-[#b0b0b0] rounded bg-white">
+                        <option>25</option>
+                        <option>50</option>
+                        <option>100</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label htmlFor="message-preview" className="text-xl min-w-[200px]">Message preview:</label>
+                      <select id="message-preview" className="text-xl px-4 py-2 border-2 border-[#b0b0b0] rounded bg-white">
+                        <option>1 line</option>
+                        <option>2 lines</option>
+                        <option>3 lines</option>
+                      </select>
+                    </div>
+                    <div className="pt-6">
+                      <Button
+                        className="text-xl py-6 px-8 bg-retroBlue hover:bg-retroBlue/80"
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "Settings" && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between border-b-2 border-[#b0b0b0] pb-4">
+                    <h2 className="text-2xl font-bold text-retroBlue">Account Settings</h2>
+                  </div>
+                  <div className="space-y-6">
+                    <SignedIn>
+                      <div className="grid grid-cols-2 gap-8">
+                        <div>
+                          <label className="block text-xl mb-2">Current Email</label>
+                          <Input
+                            value={user?.primaryEmailAddress?.emailAddress || "Not available"}
+                            disabled
+                            className="text-xl py-4 bg-[#f0f0f0]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xl mb-2">Display Name</label>
+                          <Input
+                            value={user?.fullName || ""}
+                            placeholder="Your display name"
+                            className="text-xl py-4"
+                          />
+                        </div>
+                      </div>
+                      <div className="pt-4 flex justify-between items-center border-t-2 border-[#b0b0b0]">
+                        <div className="flex items-center gap-4">
+                          <UserButton
+                            appearance={{
+                              elements: {
+                                avatarBox: "w-12 h-12",
+                                userButtonPopoverCard: "bg-white border-2 border-[#b0b0b0]"
+                              }
+                            }}
+                          />
+                          <span className="text-xl">Manage Account</span>
+                        </div>
+                        <Button
+                          className="text-xl py-6 px-8 bg-retroBlue hover:bg-retroBlue/80"
+                        >
+                          Save Changes
+                        </Button>
+                      </div>
+                    </SignedIn>
+                    <SignedOut>
+                      <div className="text-center py-8">
+                        <p className="text-xl mb-4">Please sign in to access account settings</p>
+                        <SignInButton mode="modal">
+                          <Button className="text-xl py-6 px-8 bg-retroBlue hover:bg-retroBlue/80">
+                            Sign In
+                          </Button>
+                        </SignInButton>
+                      </div>
+                    </SignedOut>
+                  </div>
+                </div>
+              )}
             </SignedIn>
           </section>
         </main>
