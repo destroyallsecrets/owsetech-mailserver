@@ -2,8 +2,27 @@
 
 import { SignIn } from "@clerk/nextjs";
 import { RetroWindow } from "../../components/RetroWindow";
+import { useEffect, useState } from "react";
 
 export default function Auth() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#e5e3db] flex items-center justify-center p-4">
+        <RetroWindow title="Sign In">
+          <div className="p-8 text-center">
+            <div className="text-xl text-retroBlue">Loading...</div>
+          </div>
+        </RetroWindow>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#e5e3db] flex items-center justify-center p-4">
       <RetroWindow title="Sign In">

@@ -3,7 +3,7 @@
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexReactClient } from "convex/react";
 import { ClerkProvider, useAuth } from "@clerk/nextjs";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 interface ConvexProviderProps {
   children: ReactNode;
@@ -11,11 +11,20 @@ interface ConvexProviderProps {
 }
 
 export function ConvexProvider({ children, client }: ConvexProviderProps) {
+  const [isClient, setIsClient] = useState(false);
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   if (!publishableKey) {
     console.error("Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY");
     return <div>Configuration Error: Missing Clerk publishable key</div>;
+  }
+
+  if (!isClient) {
+    return <div>Loading...</div>;
   }
 
   return (
