@@ -22,14 +22,14 @@ export const create = mutation({
     // Ensure unique username@domain
     const existing = await db
       .query("users")
-      .withIndex("by_username_domain", q => q.eq("username", username).eq("domain", domain))
+      .withIndex("by_username_domain", (q) => q.eq("username", username).eq("domain", domain))
       .unique();
       
     if (existing) throw new Error("Username@domain already exists");
     
     const existingUser = await db
       .query("users")
-      .filter(q => q.eq(q.field("userId"), userId))
+      .filter((q) => q.eq(q.field("userId"), userId))
       .unique();
       
     if (existingUser) throw new Error("User already exists");
@@ -55,7 +55,7 @@ export const getByAddress = query({
     
     return await db
       .query("users")
-      .withIndex("by_username_domain", q => q.eq("username", username).eq("domain", domain))
+      .withIndex("by_username_domain", (q) => q.eq("username", username).eq("domain", domain))
       .unique();
   },
 });
@@ -73,7 +73,7 @@ export const getCurrentUser = query(async ({ db, auth }) => {
   
   return await db
     .query("users")
-    .filter(q => q.eq(q.field("userId"), identity.subject))
+    .filter((q) => q.eq(q.field("userId"), identity.subject))
     .unique();
 });
 

@@ -11,48 +11,53 @@ export const list = query({
     // Get user's registered username@domain
     const user = await db
       .query("users")
-      .filter(q => q.eq(q.field("userId"), userId))
+      .filter((q) => q.eq(q.field("userId"), userId))
       .unique();
 
     if (!user) throw new Error("User not registered");
 
     const userAddress = `${user.username}@${user.domain}`;
 
-    let q = db.query("mail").order("desc");
+    let mailQuery = db.query("mail").order("desc");
 
     if (args.folder) {
       switch (args.folder) {
         case "inbox":
-          q = q.filter(q => q.eq(q.field("to"), userAddress))
-            .filter(q => q.eq(q.field("isDeleted"), false))
-            .filter(q => q.eq(q.field("isDraft"), false));
+          mailQuery = mailQuery
+            .filter((q) => q.eq(q.field("to"), userAddress))
+            .filter((q) => q.eq(q.field("isDeleted"), false))
+            .filter((q) => q.eq(q.field("isDraft"), false));
           break;
         case "sent":
-          q = q.filter(q => q.eq(q.field("from"), userAddress))
-            .filter(q => q.eq(q.field("isDraft"), false))
-            .filter(q => q.eq(q.field("isDeleted"), false));
+          mailQuery = mailQuery
+            .filter((q) => q.eq(q.field("from"), userAddress))
+            .filter((q) => q.eq(q.field("isDraft"), false))
+            .filter((q) => q.eq(q.field("isDeleted"), false));
           break;
         case "drafts":
-          q = q.filter(q => q.eq(q.field("from"), userAddress))
-            .filter(q => q.eq(q.field("isDraft"), true))
-            .filter(q => q.eq(q.field("isDeleted"), false));
+          mailQuery = mailQuery
+            .filter((q) => q.eq(q.field("from"), userAddress))
+            .filter((q) => q.eq(q.field("isDraft"), true))
+            .filter((q) => q.eq(q.field("isDeleted"), false));
           break;
         case "deleted":
-          q = q.filter(q => q.or(
-            q.eq(q.field("to"), userAddress),
-            q.eq(q.field("from"), userAddress)
-          ))
-            .filter(q => q.eq(q.field("isDeleted"), true));
+          mailQuery = mailQuery
+            .filter((q) => q.or(
+              q.eq(q.field("to"), userAddress),
+              q.eq(q.field("from"), userAddress)
+            ))
+            .filter((q) => q.eq(q.field("isDeleted"), true));
           break;
       }
     } else {
       // Default to inbox view
-      q = q.filter(q => q.eq(q.field("to"), userAddress))
-        .filter(q => q.eq(q.field("isDeleted"), false))
-        .filter(q => q.eq(q.field("isDraft"), false));
+      mailQuery = mailQuery
+        .filter((q) => q.eq(q.field("to"), userAddress))
+        .filter((q) => q.eq(q.field("isDeleted"), false))
+        .filter((q) => q.eq(q.field("isDraft"), false));
     }
 
-    return await q.collect();
+    return await mailQuery.collect();
   }
 });
 
@@ -68,7 +73,7 @@ export const get = query({
     // Get user's registered username@domain
     const user = await db
       .query("users")
-      .filter(q => q.eq(q.field("userId"), identity.subject))
+      .filter((q) => q.eq(q.field("userId"), identity.subject))
       .unique();
 
     if (!user) throw new Error("User not registered");
@@ -99,7 +104,7 @@ export const send = mutation({
     // Get user's registered username@domain
     const user = await db
       .query("users")
-      .filter(q => q.eq(q.field("userId"), userId))
+      .filter((q) => q.eq(q.field("userId"), userId))
       .unique();
 
     if (!user) throw new Error("User not registered");
@@ -111,7 +116,7 @@ export const send = mutation({
       const [toUsername, toDomain] = to.split("@");
       const recipient = await db
         .query("users")
-        .withIndex("by_username_domain", q => q.eq("username", toUsername).eq("domain", toDomain))
+        .withIndex("by_username_domain", (q) => q.eq("username", toUsername).eq("domain", toDomain))
         .unique();
 
       if (!recipient) throw new Error("Recipient not found");
@@ -146,7 +151,7 @@ export const saveDraft = mutation({
     // Get user's registered username@domain
     const user = await db
       .query("users")
-      .filter(q => q.eq(q.field("userId"), userId))
+      .filter((q) => q.eq(q.field("userId"), userId))
       .unique();
 
     if (!user) throw new Error("User not registered");
@@ -191,7 +196,7 @@ export const deleteMail = mutation({
     // Get user's registered username@domain
     const user = await db
       .query("users")
-      .filter(q => q.eq(q.field("userId"), identity.subject))
+      .filter((q) => q.eq(q.field("userId"), identity.subject))
       .unique();
 
     if (!user) throw new Error("User not registered");
@@ -219,7 +224,7 @@ export const restoreMail = mutation({
     // Get user's registered username@domain
     const user = await db
       .query("users")
-      .filter(q => q.eq(q.field("userId"), identity.subject))
+      .filter((q) => q.eq(q.field("userId"), identity.subject))
       .unique();
 
     if (!user) throw new Error("User not registered");
@@ -247,7 +252,7 @@ export const markAsRead = mutation({
     // Get user's registered username@domain
     const user = await db
       .query("users")
-      .filter(q => q.eq(q.field("userId"), identity.subject))
+      .filter((q) => q.eq(q.field("userId"), identity.subject))
       .unique();
 
     if (!user) throw new Error("User not registered");

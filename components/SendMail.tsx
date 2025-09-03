@@ -58,7 +58,7 @@ export default function SendMail() {
     setSuccess(null);
     
     // Validate to address: must be username@domain
-    if (!/^\w+@\w+$/.test(to)) {
+    if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+$/.test(to)) {
       setError("Recipient must be in the format username@domain");
       return;
     }
