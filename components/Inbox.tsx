@@ -20,9 +20,9 @@ export default function Inbox() {
   const [currentFolder, setCurrentFolder] = useState("inbox");
   const [activeTab, setActiveTab] = useState("Mail");
 
-  // Use proper mail functions with auth
-  const mails = useQuery(api.mail.list, { folder: currentFolder }) || [];
-  const currentUser = useQuery(api.users.getCurrentUser);
+  // Use proper mail functions with auth - only call when user is signed in
+  const mails = useQuery(api.mail.list, user ? { folder: currentFolder } : "skip") || [];
+  const currentUser = useQuery(api.users.getCurrentUser, user ? {} : "skip");
   const deleteMail = useMutation(api.mail.deleteMail);
   const restoreMail = useMutation(api.mail.restoreMail);
   const markAsRead = useMutation(api.mail.markAsRead);

@@ -11,8 +11,15 @@ interface ConvexProviderProps {
 }
 
 export function ConvexProvider({ children, client }: ConvexProviderProps) {
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  
+  if (!publishableKey) {
+    console.error("Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY");
+    return <div>Configuration Error: Missing Clerk publishable key</div>;
+  }
+
   return (
-    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
+    <ClerkProvider publishableKey={publishableKey}>
       <ConvexProviderWithClerk client={client} useAuth={useAuth}>
         {children}
       </ConvexProviderWithClerk>
